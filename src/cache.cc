@@ -84,7 +84,7 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
             return MODIFIED;
          }
          else
-            return POLLOTHERS; // To handle Exclusive cases
+            return POLL_MESI; // To handle Exclusive cases
       }
       else if (protocol == 2)
       { // MOSI
@@ -302,7 +302,7 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
          }
          else 
          {
-            if (busAction == POLLOTHERS)
+            if (busAction == POLL_MESI)
             {
                return 1;
             }
@@ -371,7 +371,7 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
 
 void Cache::sendBusReaction(uint count, uint processors, ulong addr, uint protocol, uint busAction)
 {
-   if (busAction == POLLOTHERS)
+   if (busAction == POLL_MESI)
    {
       cacheLine *line = findLine(addr);
       if (line != NULL)
