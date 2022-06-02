@@ -96,6 +96,16 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
          else
             return POLL_MOSI; // ALways go in shared state for MOSI on read Miss
       }
+      else if (protocol == 3)
+      { // MOSI
+         if (op == 'w')
+         {
+            newline->setFlags(DIRTY);
+            return MODIFIED;
+         }
+         else
+            return POLL_MOESI; // 
+      }
       else
       {
          cout << "Undefined protocol - Should Not reach here, returning no action" << endl;
@@ -289,12 +299,12 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                }
                line->setFlags(INVALID);
             }
-            else if (busAction == POLLOTHERS)
+         }
+         else 
+         {
+            if (busAction == POLLOTHERS)
             {
-               if (line->getFlags() == INVALID)
-               {
-                  return 1;
-               }
+               return 1;
             }
          }
       }
@@ -342,7 +352,13 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                if (line->getFlags() == OWNED || line->getFlags() == DIRTY){
                   line->setFlags(OWNED); // Else leave state as is
                }
-               else if (line->getFlags() == INVALID)
+            }
+         }
+         else
+         {
+            if (busAction == POLL_MOESI)
+            {
+               if (line->getFlags() == INVALID)
                {
                   return 1;
                }
