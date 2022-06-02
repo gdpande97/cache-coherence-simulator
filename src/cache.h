@@ -27,7 +27,8 @@ enum
    SHARED = 1,
    NOACTION = 2,
    POLLOTHERS = 3,
-   POLL_MOSI = 4
+   POLL_MOSI = 4,
+   POLL_MOESI = 5
 } possibleBusAction;
 
 class cacheLine

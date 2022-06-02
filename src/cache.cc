@@ -142,6 +142,18 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
             return NOACTION;
          }
       }
+      else if (protocol == 3)
+      { // MOSI
+         if (op == 'w')
+         {
+            line->setFlags(DIRTY);
+            return MODIFIED;
+         }
+         else
+         {
+            return NOACTION;
+         }
+      }
       else
       {
          cout << "Undefined protocol - Should Not reach here, returning no action" << endl;
@@ -310,6 +322,34 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
          }
       }
    }
+   else if (protocol == 3)
+   { // MOSI
+      if (line != NULL)
+      {
+         if (line->isValid())
+         {
+            if (busAction == MODIFIED)
+            {
+               if (line->getFlags() == DIRTY)
+               {
+                  writeBack(addr);
+                  line->setFlags(VALID);
+               }
+               line->setFlags(INVALID);
+            }
+            else if (busAction == POLL_MOESI)
+            {
+               if (line->getFlags() == OWNED || line->getFlags() == DIRTY){
+                  line->setFlags(OWNED); // Else leave state as is
+               }
+               else if (line->getFlags() == INVALID)
+               {
+                  return 1;
+               }
+            }
+         }
+      }
+   }
    return 0;
 }
 
@@ -342,6 +382,27 @@ void Cache::sendBusReaction(uint count, uint processors, ulong addr, uint protoc
             if (line->isValid())
             {
                line->setFlags(VALID);
+            }
+         }
+      }
+   }
+   else if (busAction == POLL_MOESI)
+   {
+      cacheLine *line = findLine(addr);
+      if (line != NULL)
+      {
+         if (protocol == 3)
+         { // MOESI
+            if (line->isValid())
+            {
+               if (count != processors - 1)
+               {
+                  line->setFlags(VALID);
+               }
+               else
+               {
+                  line->setFlags(EXCLUSIVE);
+               }
             }
          }
       }
