@@ -48,7 +48,7 @@ Cache::Cache(int s,int a,int b )
 /**you might add other parameters to Access()
 since this function is an entry point 
 to the memory hierarchy (i.e. caches)**/
-unsigned int Cache::Access(ulong addr,uchar op)
+unsigned int Cache::Access(ulong addr,uchar op, uint protocol)
 {
 	currentCycle++;/*per cache global counter to maintain LRU order 
 			among cache ways, updated on every cache access*/
@@ -63,25 +63,56 @@ unsigned int Cache::Access(ulong addr,uchar op)
 		else readMisses++;
 
 		cacheLine *newline = fillLine(addr);
-   		if(op == 'w') {
+      if(protocol == 0) { //MSI
+    		if(op == 'w') {
             newline->setFlags(DIRTY);    
             return MODIFIED;
          } else 
             return SHARED;
-         
+      }  
+      else if(protocol == 1) { //MESI
+         if(op == 'w') {
+            newline->setFlags(DIRTY);    
+            return MODIFIED;
+         } else 
+            return POLLOTHERS; //To handle Exclusive cases
+      }
+      else if(protocol == 2) { //MOSI
+         if(op == 'w') {
+            newline->setFlags(DIRTY);    
+            return MODIFIED;
+         } else 
+            return POLL_MOSI; //ALways go in shared state for MOSI on read Miss
+      }  
 	}
-	else
+	else 
 	{
 		/**since it's a hit, update LRU and update dirty flag**/
 		updateLRU(line);
-		if(op == 'w') {
-         line->setFlags(DIRTY);
-         return MODIFIED;
-      } else {
-         return NOACTION;
-      } 
-     
-      
+      if(protocol == 0){ //MSI
+		   if(op == 'w') {
+            line->setFlags(DIRTY);
+            return MODIFIED;
+         } else {
+            return NOACTION;
+         } 
+      }
+      else if(protocol == 1){ //MESI
+         if(op == 'w') {
+            line->setFlags(DIRTY);
+            return MODIFIED;
+         } else {
+            return NOACTION;
+         } 
+      }
+      else if(protocol == 2){ //MOSI
+         if(op == 'w') {
+            line->setFlags(DIRTY);
+            return MODIFIED;
+         } else {
+            return NOACTION;
+         } 
+      }
 	}
 }
 
@@ -161,25 +192,106 @@ cacheLine *Cache::fillLine(ulong addr)
    return victim;
 }
 
-void Cache::busResponse(uint busAction, ulong addr) {
+unsigned int Cache::busResponse(uint busAction, ulong addr) {
    cacheLine * line = findLine(addr);
-   if(line != NULL) {
-      if(line->isValid()) {
-         if(busAction == SHARED) {
-            if(line->getFlags() == DIRTY) {
-               writeBack(addr);
-               line->setFlags(VALID);
+   if(protocol == 0){ //MSI
+      if(line != NULL) {
+         if(line->isValid()) {
+            if(busAction == SHARED) {
+               if(line->getFlags() == DIRTY) {
+                  writeBack(addr);
+                  line->setFlags(VALID);
+               }
+            } else if (busAction == MODIFIED) {
+               if(line->getFlags() == DIRTY) {
+                  writeBack(addr);
+                  line->setFlags(VALID);
+               } 
+               line->setFlags(INVALID);
             }
-         } else if (busAction == MODIFIED) {
-            if(line->getFlags() == DIRTY) {
-               writeBack(addr);
-               line->setFlags(VALID);
-            } 
-            line->setFlags(INVALID);
+         }    
+      } 
+   }
+   else if(protocol == 1){ //MESI
+      if(line != NULL) {
+         if(line->isValid()) {
+            if (busAction == MODIFIED) {
+               if(line->getFlags() == DIRTY) {
+                  writeBack(addr);
+                  line->setFlags(VALID);
+               } 
+               line->setFlags(INVALID);
+            }
+            else if (busAction == POLLOTHERS) {
+               if(line->getFlags() == INVALID) {
+                  return 1;
+               }
+            }
+         }    
+      } 
+   }
+   else if(protocol == 2){ //MOSI
+      if(line != NULL) {
+         if(line->isValid()) {
+            if (busAction == MODIFIED) {
+               if(line->getFlags() == DIRTY) {
+                  writeBack(addr);
+                  line->setFlags(VALID);
+               } 
+               line->setFlags(INVALID);
+            }
+            else if (busAction == POLL_MOSI) {
+               if(line->getFlags() == OWNED || line->getFlags() == DIRTY) 
+                  line->setFlags(OWNED); //Else leave state as is                  
+            }
+         }    
+      } 
+   } 
+   return 0;   
+}
+
+/*allocate a new line*/
+cacheLine *Cache::fillLine(ulong addr)
+{ 
+   ulong tag;
+  
+   cacheLine *victim = findLineToReplace(addr);
+   assert(victim != 0);
+   if(victim->getFlags() == DIRTY) writeBack(addr);
+      
+   tag = calcTag(addr);   
+   victim->setTag(tag);
+   victim->setFlags(VALID);    
+   /**note that this cache line has been already 
+      upgraded to MRU in the previous function (findLineToReplace)**/
+
+   return victim;
+}
+
+void Cache::sendBusReaction(uint count, uint processors, ulong addr, uint protocol, uint busAction) {
+   if(busAction == POLLOTHERS){
+      cacheLine * line = findLine(addr);
+      if(line != NULL) {
+         if(protocol == 1){ //MESI
+            if(line->isValid()) {
+               if(count != processors - 1)
+                  line->setFlags(VALID);
+               else
+                line->setFlags(EXCLUSIVE);
+            }
          }
       }
-       
-   } 
+   }
+   else if(busAction == POLL_MOSI){
+      cacheLine * line = findLine(addr);
+      if(line != NULL) {
+         if(protocol == 2){ //MOSI
+            if(line->isValid()) {
+               line->setFlags(VALID);
+            }    
+         }
+      }
+   }
 }
 
 void Cache::printStats(int proc_id)

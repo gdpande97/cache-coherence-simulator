@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
 	unsigned char op;
 	unsigned long addr;
 	unsigned int busAction;
+	unsigned int checkCount;
 
 	if(argv[1] == NULL){
 		 printf("input format: ");
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
 	int cache_assoc= atoi(argv[2]);
 	int blk_size   = atoi(argv[3]);
 	int num_processors = atoi(argv[4]);/*1, 2, 4, 8*/
-	int protocol   = atoi(argv[5]);	 /*0:MSI, 1:MESI, 2:Dragon*/
+	int protocol   = atoi(argv[5]);	 /*0:MSI, 1:MESI, 2:MOSI*/
 	char *fname =  (char *)malloc(20);
  	fname = argv[6];
 
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
 	printf("L1_ASSOC: %d\n", cache_assoc);
 	printf("L1_BLOCKSIZE: %d\n", blk_size);
 	printf("NUMBER OF PROCESSORS: %d\n", num_processors);
-	printf("COHERENCE PROTOCOL: %s\n", (protocol == 0)?"MSI":((protocol == 1)?"MESI":((protocol == 2)?"Dragon":"--")));
+	printf("COHERENCE PROTOCOL: %s\n", (protocol == 0)?"MSI":((protocol == 1)?"MESI":((protocol == 2)?"MOSI":"MOESI")));
 	printf("TRACE FILE: %.27s\n", &fname[3]); // no "../"
 
 	//*********************************************//
@@ -84,13 +85,14 @@ int main(int argc, char *argv[])
 
 		// cout<<"Processor ID is "<<proc_id << ", Operation is "<<op<<", address is "<<addr<<endl;
 
-		busAction = privateCaches[proc_id]->Access(addr, op);
+		busAction = privateCaches[proc_id]->Access(addr, op, protocol);
+		checkCount = 0;
 		for(int i = 0; i < num_processors; i++) {
 			if(i!=proc_id){
-				privateCaches[i]->busResponse(busAction, addr);
+				checkCount += privateCaches[i]->busResponse(busAction, addr);
 			}
 		}
-	
+		privateCaches[proc_id]->sendBusReaction(checkCount, num_processors, addr, protocol, busAction);	
 	}
 	fclose(pFile);
 

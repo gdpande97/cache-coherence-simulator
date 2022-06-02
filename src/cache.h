@@ -15,15 +15,17 @@ typedef unsigned int uint;
 /****add new states, based on the protocol****/
 enum{
 	INVALID = 0,
-	VALID,
+	VALID, //Equivalent to shared in MSI, MOSI, MESI
+   EXCLUSIVE,
+   OWNED,
 	DIRTY
 };
 enum {
    MODIFIED = 0,
    SHARED = 1,
-   INVALID = 2,
-   EXCLUSIVE = 3,
-   NOACTION = 4
+   NOACTION = 2,
+   POLLOTHERS = 3,
+   POLL_MOSI = 4
 } possibleBusAction;
 
 class cacheLine 
@@ -76,10 +78,11 @@ public:
    ulong getWB(){return writeBacks;}
    
    void writeBack(ulong)   {writeBacks++;}
-   unsigned int Access(ulong,uchar);
+   unsigned int Access(ulong,uchar,uint);
    void printStats(int);
    void updateLRU(cacheLine *);
-   void busResponse(uint, ulong);
+   unsigned int busResponse(uint, ulong);
+   void sendBusReaction(uint, uint, ulong, uint, uint);
    //******///
    //add other functions to handle bus transactions///
    //******///
