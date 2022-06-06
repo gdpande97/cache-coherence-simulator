@@ -123,7 +123,7 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
       { // MSI
          if (op == 'w')
          {
-            if(line->getFlags == VALID){
+            if(line->getFlags() == VALID){
                writeForOwnershipMsg++; //Ownership message sent if in S state for MSI, can't be in I state here
             }
             line->setFlags(DIRTY);
@@ -138,7 +138,7 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
       { // MESI
          if (op == 'w')
          {
-            if(line->getFlags == VALID){
+            if(line->getFlags() == VALID){
                writeForOwnershipMsg++; //Ownership message sent if in S state for MESI, can't be in I state here.. E->M is silent
             }
             line->setFlags(DIRTY);
@@ -153,7 +153,7 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
       { // MOSI
          if (op == 'w')
          {
-            if(line->getFlags == VALID || line->getFlags == OWNED){
+            if(line->getFlags() == VALID || line->getFlags() == OWNED){
                writeForOwnershipMsg++; //Ownership message sent if in S/O state for MOSI, can't be in I state here.. 
             }
             line->setFlags(DIRTY);
@@ -168,7 +168,7 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
       { // MOSI
          if (op == 'w')
          {
-            if(line->getFlags == VALID || line->getFlags == OWNED){
+            if(line->getFlags() == VALID || line->getFlags() == OWNED){
                writeForOwnershipMsg++; //Ownership message sent if in S/O state for MOESI, can't be in I state here.. E->M is silent
             }
             line->setFlags(DIRTY);
