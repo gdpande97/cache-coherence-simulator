@@ -61,8 +61,8 @@ public:
 class Cache
 {
 protected:
-   ulong size, lineSize, assoc, sets, log2Sets, log2Blk, tagMask, numLines;
-   ulong reads, readMisses, writes, writeMisses, writeBacks;
+   ulong size, lineSize, assoc, sets, log2Sets, log2Blk, tagMask, numLines, servicedFromOtherCore;
+   ulong reads, readMisses, writes, writeMisses, writeBacks, invalidations, servicedFromMem, writeForOwnershipMsg;
 
    //******///
    // add coherence counters here///
