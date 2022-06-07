@@ -91,13 +91,18 @@ public:
    ulong getWrites() { return writes; }
    ulong getWB() { return writeBacks; }
 
-   void writeBack(ulong) { writeBacks++; sendDatatoMem++;}
+   void writeBack(ulong)
+   {
+      writeBacks++;
+      sendDatatoMem++;
+   }
    unsigned int Access(ulong, uchar, uint);
    void printStats(int);
    void updateLRU(cacheLine *);
    unsigned int busResponse(uint, uint, ulong, uint &, uint &);
    void sendBusReaction(uint, uint, ulong, uint, uint, uint &, uint &);
    void updateStats(uint, uint);
+   void printState(ulong, int);
    //******///
    // add other functions to handle bus transactions///
    //******///

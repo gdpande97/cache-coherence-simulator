@@ -87,6 +87,11 @@ int main(int argc, char *argv[])
 		sscanf(((string)(strtok(NULL, delimiter))).c_str(), "%lx", &addr);
 
 		// cout<<"Processor ID is "<<proc_id << ", Operation is "<<op<<", address is "<<addr<<endl;
+		cout << "===== before access ===============" << endl;
+		for (int i = 0; i < num_processors; i++)
+		{
+			privateCaches[i]->printState(addr, i);
+		}
 
 		busAction = privateCaches[proc_id]->Access(addr, op, protocol);
 		checkCount = 0;
@@ -99,8 +104,14 @@ int main(int argc, char *argv[])
 				checkCount += privateCaches[i]->busResponse(protocol, busAction, addr, incServicedFromOtherCore, incServicedFromMem);
 			}
 		}
+
 		privateCaches[proc_id]->sendBusReaction(checkCount, num_processors, addr, protocol, busAction, incServicedFromOtherCore, incServicedFromMem);
-		privateCaches[proc_id]->updateStats(incServicedFromOtherCore,incServicedFromMem);
+		privateCaches[proc_id]->updateStats(incServicedFromOtherCore, incServicedFromMem);
+		cout << "===== after access ===============" << endl;
+		for (int i = 0; i < num_processors; i++)
+		{
+			privateCaches[i]->printState(addr, i);
+		}
 	}
 	fclose(pFile);
 
