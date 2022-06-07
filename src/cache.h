@@ -61,8 +61,8 @@ public:
 class Cache
 {
 protected:
-   ulong size, lineSize, assoc, sets, log2Sets, log2Blk, tagMask, numLines, servicedFromOtherCore;
-   ulong reads, readMisses, writes, writeMisses, writeBacks, invalidations, servicedFromMem, writeForOwnershipMsg;
+   ulong size, lineSize, assoc, sets, log2Sets, log2Blk, tagMask, numLines, servicedFromOtherCore, sendDatatoMem, silentUpgrade;
+   ulong reads, readMisses, writes, writeMisses, writeBacks, invalidations, servicedFromMem, getMMsgs, getSMsgs, currentHit, inc;
 
    //******///
    // add coherence counters here///
@@ -90,7 +90,7 @@ public:
    ulong getWrites() { return writes; }
    ulong getWB() { return writeBacks; }
 
-   void writeBack(ulong) { writeBacks++; }
+   void writeBack(ulong) { writeBacks++; sendDatatoMem++;}
    unsigned int Access(ulong, uchar, uint);
    void printStats(int);
    void updateLRU(cacheLine *);

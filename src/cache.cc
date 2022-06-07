@@ -11,8 +11,8 @@ Cache::Cache(int s, int a, int b)
 {
    ulong i, j;
    reads = readMisses = writes = 0;
-   writeMisses = writeBacks = currentCycle = 0, servicedFromMem = 0, writeForOwnershipMsg=0, servicedFromOtherCore=0;
-   invalidations = 0;
+   writeMisses = writeBacks = currentCycle = 0, servicedFromMem = 0, getMMsgs=0,getSMsgs=0, servicedFromOtherCore=0;
+   invalidations = 0, currentHit = 0, inc = 0, sendDatatoMem = 0, silentUpgrade = 0;
 
    size = (ulong)(s);
    lineSize = (ulong)(b);
@@ -52,6 +52,8 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
 {
    currentCycle++; /*per cache global counter to maintain LRU order
           among cache ways, updated on every cache access*/
+   currentHit = 0;
+   inc = 0;
 
    if (op == 'w')
       writes++;
@@ -61,12 +63,16 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
    cacheLine *line = findLine(addr);
    if (line == NULL) /*miss*/
    {
-      if (op == 'w'){
+      if (op == 'w')
+      {
          writeMisses++;
-         writeForOwnershipMsg++; //Write miss can never have state silent change to M state for any protocol
+         getMMsgs++; //Write miss can never have state silent change to M state for any protocol
       }
       else
-         readMisses++;
+      {
+         getSMsgs++; //Read miss can never have state silent change to M state for any protocol
+         readMisses++; 
+      }
 
       cacheLine *newline = fillLine(addr);
       if (protocol == 0)
@@ -87,7 +93,9 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
             return MODIFIED;
          }
          else
+         {
             return POLL_MESI; // To handle Exclusive cases
+         }
       }
       else if (protocol == 2)
       { // MOSI
@@ -117,6 +125,7 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
    }
    else
    {
+      currentHit=1;
       /**since it's a hit, update LRU and update dirty flag**/
       updateLRU(line);
       if (protocol == 0)
@@ -124,7 +133,7 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
          if (op == 'w')
          {
             if(line->getFlags() == VALID){
-               writeForOwnershipMsg++; //Ownership message sent if in S state for MSI, can't be in I state here
+               getMMsgs++; //Ownership message sent if in S state for MSI, can't be in I state here
             }
             line->setFlags(DIRTY);
             return MODIFIED;
@@ -139,7 +148,11 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
          if (op == 'w')
          {
             if(line->getFlags() == VALID){
-               writeForOwnershipMsg++; //Ownership message sent if in S state for MESI, can't be in I state here.. E->M is silent
+               getMMsgs++; //Ownership message sent if in S state for MESI, can't be in I state here.. E->M is silent
+            }
+            else if (line->getFlags() == EXCLUSIVE)
+            {
+               silentUpgrade++;
             }
             line->setFlags(DIRTY);
             return MODIFIED;
@@ -154,7 +167,7 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
          if (op == 'w')
          {
             if(line->getFlags() == VALID || line->getFlags() == OWNED){
-               writeForOwnershipMsg++; //Ownership message sent if in S/O state for MOSI, can't be in I state here.. 
+               getMMsgs++; //Ownership message sent if in S/O state for MOSI, can't be in I state here.. 
             }
             line->setFlags(DIRTY);
             return MODIFIED;
@@ -169,7 +182,11 @@ unsigned int Cache::Access(ulong addr, uchar op, uint protocol)
          if (op == 'w')
          {
             if(line->getFlags() == VALID || line->getFlags() == OWNED){
-               writeForOwnershipMsg++; //Ownership message sent if in S/O state for MOESI, can't be in I state here.. E->M is silent
+               getMMsgs++; //Ownership message sent if in S/O state for MOESI, can't be in I state here.. E->M is silent
+            }
+            else if (line->getFlags() == EXCLUSIVE)
+            {
+               silentUpgrade++;
             }
             line->setFlags(DIRTY);
             return MODIFIED;
@@ -283,11 +300,11 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
             {
                if (line->getFlags() == DIRTY)
                {
-                  servicedFromOtherCore++; //Sends data to memory as well as to other core on otherGetS in dirty state
-                  writeBack(addr);
+                  servicedFromOtherCore++; //Sends data to memory other core on otherGetS in dirty state
+                  writeBack(addr);//Sends data to memory on otherGetS in dirty state
                   line->setFlags(VALID);
                }
-               else
+               else // Read Miss in MSI
                {
                   servicedFromMem++; //in MSI only Dirty state can provide data to requester else it is memory
                }
@@ -300,13 +317,11 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                   invalidations++; //Updates whenever M -> I 
                   line->setFlags(INVALID);
                   // writeBack(addr); //No need to send data to memory if its a OtherGETM while you are in Dirty state
-                  //line->setFlags(VALID);
                }
-               else
+               else if(line->getFlags() == VALID)
                {
                   invalidations++; //Updates whenever S -> I 
                   line->setFlags(INVALID);
-                  servicedFromMem++; //in MSI only Dirty state can provide data to requester else it is memory
                }
             }
          }
@@ -324,7 +339,6 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                {
                   servicedFromOtherCore++; // Send data to requester if in M state 
                   //writeBack(addr); //No need to send data to memory if its a OtherGETM while you are in Dirty state
-                  line->setFlags(VALID);
                   invalidations++; //Updates whenever M -> I 
                   line->setFlags(INVALID);
                }
@@ -336,7 +350,11 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                }
                else
                {
-                  servicedFromMem++; //Serviced from memory if line is valid and not M or E
+                  if(!currentHit & (inc == 0))
+                  {
+                     inc = 1; //Set here on firt time so that we don't double count (something like 10 sharers and 1 Modified comes)
+                     servicedFromMem++; //Serviced from memory if it was a miss
+                  }
                   invalidations++; //Updates whenever S -> I 
                   line->setFlags(INVALID);
                } 
@@ -353,6 +371,7 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                else if (line-> getFlags() == EXCLUSIVE)
                {
                   servicedFromOtherCore++; // Send data to requester if in E state 
+                  sendDatatoMem++;
                   line->setFlags(VALID);
                } 
             }
@@ -389,7 +408,6 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                }
                else if(line->getFlags() == SHARED)
                {
-                  servicedFromMem++; // If even one block is in shared state, the data will come from memory //FIXME
                   invalidations++; //Updates whenever S -> I 
                   line->setFlags(INVALID);
                }
@@ -401,7 +419,10 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                   servicedFromOtherCore++;
                   line->setFlags(OWNED); // Else leave state as is
                }
-               //FIXME - What is all or none are in shared state
+               else if (line->getFlags() == VALID)
+               {
+                  return 1;
+               }
             }
          }
          else if (busAction == POLL_MOSI)
@@ -448,7 +469,10 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr)
                   servicedFromOtherCore++; //Sends data to other core on otherGetM state
                   line->setFlags(VALID);
                }
-               //FIXME - What is all or none are in shared state
+               else if (line->getFlags() == VALID)
+               {
+                  return 1;
+               }
             }
          }
          else
@@ -500,7 +524,7 @@ void Cache::sendBusReaction(uint count, uint processors, ulong addr, uint protoc
          { // MOSI
             if (count == processors - 1)
             {
-               servicedFromMem++; //If it has reached here, it means all other blocks are in invalid state and memory sent this data
+               servicedFromMem++; //If it has reached here, it means all other blocks are in invalid/Shared state and memory sent this data
             }
             line->setFlags(VALID);
          }
@@ -543,7 +567,9 @@ void Cache::printStats(int proc_id)
    printf("05. total miss rate:				%4.2f%%\n", ((double)(readMisses + writeMisses) / (double)(reads + writes)) * 100);
    printf("06. number of writebacks:			%lu\n", writeBacks);
    printf("07. number of invalidations:         %lu\n", invalidations);
-   printf("08. number of writeForOwnershipMsg:         %lu\n", writeForOwnershipMsg);
+   printf("08. number of getMMsgs:         %lu\n", getMMsgs);
    printf("09. number of servicedFromMem:         %lu\n", servicedFromMem);
    printf("10. number of servicedFromOtherCore:         %lu\n", servicedFromOtherCore);
+   printf("10. number of sendDatatoMem:         %lu\n", sendDatatoMem);
+   printf("12. number of getSMsgs:         %lu\n", getSMsgs);
 }
