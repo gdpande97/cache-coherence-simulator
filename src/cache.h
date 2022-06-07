@@ -62,7 +62,7 @@ class Cache
 {
 protected:
    ulong size, lineSize, assoc, sets, log2Sets, log2Blk, tagMask, numLines, servicedFromOtherCore, sendDatatoMem, silentUpgrade;
-   ulong reads, readMisses, writes, writeMisses, writeBacks, invalidations, servicedFromMem, getMMsgs, getSMsgs, currentHit, inc;
+   ulong reads, readHits, readMisses, writes, writeHits, writeMisses, writeBacks, invalidations, servicedFromMem, getMMsgs, getSMsgs, currentHit, inc;
 
    //******///
    // add coherence counters here///
@@ -94,8 +94,9 @@ public:
    unsigned int Access(ulong, uchar, uint);
    void printStats(int);
    void updateLRU(cacheLine *);
-   unsigned int busResponse(uint, uint, ulong);
-   void sendBusReaction(uint, uint, ulong, uint, uint);
+   unsigned int busResponse(uint, uint, ulong, uint &, uint &);
+   void sendBusReaction(uint, uint, ulong, uint, uint, uint &, uint &);
+   void updateStats(uint, uint);
    //******///
    // add other functions to handle bus transactions///
    //******///

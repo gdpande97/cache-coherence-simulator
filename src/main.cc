@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 	int blk_size = atoi(argv[3]);
 	int num_processors = atoi(argv[4]); /*1, 2, 4, 8*/
 	int protocol = atoi(argv[5]);		/*0:MSI, 1:MESI, 2:MOSI*/
-	char *fname = (char *)malloc(20);
+	char *fname = (char *)malloc(50);
 	fname = argv[6];
 
 	//****************************************************//
@@ -90,14 +90,20 @@ int main(int argc, char *argv[])
 
 		busAction = privateCaches[proc_id]->Access(addr, op, protocol);
 		checkCount = 0;
+		uint incServicedFromOtherCore = 0;
+		uint incServicedFromMem = 0;
+		printf("Reached here \n");
 		for (int i = 0; i < num_processors; i++)
 		{
 			if (i != proc_id)
 			{
-				checkCount += privateCaches[i]->busResponse(protocol, busAction, addr);
+				checkCount += privateCaches[i]->busResponse(protocol, busAction, addr, incServicedFromOtherCore, incServicedFromMem);
 			}
 		}
-		privateCaches[proc_id]->sendBusReaction(checkCount, num_processors, addr, protocol, busAction);
+
+		privateCaches[proc_id]->sendBusReaction(checkCount, num_processors, addr, protocol, busAction, incServicedFromOtherCore, incServicedFromMem);
+
+		privateCaches[proc_id]->updateStats(incServicedFromOtherCore,incServicedFromMem);
 	}
 	fclose(pFile);
 
