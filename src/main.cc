@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 				checkCount += privateCaches[i]->busResponse(protocol, busAction, addr, incServicedFromOtherCore, incServicedFromMem);
 			}
 		}
-
+		cout << checkCount << " returned values" << endl;
 		privateCaches[proc_id]->sendBusReaction(checkCount, num_processors, addr, protocol, busAction, incServicedFromOtherCore, incServicedFromMem);
 		privateCaches[proc_id]->updateStats(incServicedFromOtherCore, incServicedFromMem);
 		cout << "===== after access ===============" << endl;
@@ -112,6 +112,20 @@ int main(int argc, char *argv[])
 		{
 			privateCaches[i]->printState(addr, i);
 		}
+		ulong total_invalidations = 0, total_other_cache = 0, total_writebacks = 0, total_getM = 0, total_silent = 0;
+		for (int i = 0; i < num_processors; i++)
+		{
+			total_other_cache += privateCaches[i]->servicedFromOtherCore;
+			total_writebacks += privateCaches[i]->writeBacks;
+			total_getM += privateCaches[i]->getMMsgs;
+			total_invalidations += privateCaches[i]->invalidations;
+			total_silent += privateCaches[i]->silentUpgrade;
+		}
+		cout << "Total invalidations: " << total_invalidations << endl;
+		cout << "Total other cache: " << total_other_cache << endl;
+		cout << "Total writebacks: " << total_writebacks << endl;
+		cout << "Total getM: " << total_getM << endl;
+		cout << "Total silent: " << total_silent << endl;
 	}
 	fclose(pFile);
 

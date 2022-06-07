@@ -392,12 +392,13 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr, uint 
                }
             }
          }
-         else
+      }
+      else
+      {
+         if (busAction == POLL_MESI)
          {
-            if (busAction == POLL_MESI)
-            {
-               return 1; // Used to check if the requesting block will go to Exclusive state or not
-            }
+            cout << "Reached here" << endl;
+            return 1; // Used to check if the requesting block will go to Exclusive state or not
          }
       }
    }
@@ -441,13 +442,10 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr, uint 
                }
             }
          }
-         else if (busAction == POLL_MOSI)
-         {
-            if (line->getFlags() == INVALID)
-            {
-               return 1;
-            }
-         }
+      }
+      else if (busAction == POLL_MOSI)
+      {
+         return 1;
       }
    }
    else if (protocol == 3)
@@ -467,7 +465,7 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr, uint 
                }
                else if (line->getFlags() == SHARED)
                {
-                  // servicedFromMem++; //Cant add here since a block in O state can also send data... //FIXME
+                  // servicedFromMem++; //Cant add here since a block in O state can also send data... /
                   invalidations++; // Updates whenever S -> I
                   line->setFlags(INVALID);
                }
@@ -490,15 +488,12 @@ unsigned int Cache::busResponse(uint protocol, uint busAction, ulong addr, uint 
                }
             }
          }
-         else
+      }
+      else
+      {
+         if (busAction == POLL_MOESI)
          {
-            if (busAction == POLL_MOESI)
-            {
-               if (line->getFlags() == INVALID)
-               {
-                  return 1;
-               }
-            }
+            return 1;
          }
       }
    }
