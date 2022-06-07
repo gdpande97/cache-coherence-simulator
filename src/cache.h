@@ -19,7 +19,8 @@ enum
    VALID, // Equivalent to shared in MSI, MOSI, MESI
    EXCLUSIVE,
    OWNED,
-   DIRTY
+   DIRTY,
+   COFEESCP
 };
 enum
 {

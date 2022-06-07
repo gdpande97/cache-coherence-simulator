@@ -566,11 +566,11 @@ void Cache::sendBusReaction(uint count, uint processors, ulong addr, uint protoc
    }
 }
 
-void Cache::updateStats(uint incServicedFromOtherCore, uint incServicedFromMem)
-{
-   servicedFromMem       += incServicedFromMem;
-   servicedFromOtherCore += incServicedFromOtherCore;
-}
+//void Cache::updateStats(uint incServicedFromOtherCore, uint incServicedFromMem)
+//{
+//   servicedFromMem       += incServicedFromMem;
+//   servicedFromOtherCore += incServicedFromOtherCore;
+//}
 
 void Cache::printStats(int proc_id)
 {

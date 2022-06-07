@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
 		checkCount = 0;
 		uint incServicedFromOtherCore = 0;
 		uint incServicedFromMem = 0;
-		printf("Reached here \n");
 		for (int i = 0; i < num_processors; i++)
 		{
 			if (i != proc_id)
@@ -100,9 +99,7 @@ int main(int argc, char *argv[])
 				checkCount += privateCaches[i]->busResponse(protocol, busAction, addr, incServicedFromOtherCore, incServicedFromMem);
 			}
 		}
-
 		privateCaches[proc_id]->sendBusReaction(checkCount, num_processors, addr, protocol, busAction, incServicedFromOtherCore, incServicedFromMem);
-
 		privateCaches[proc_id]->updateStats(incServicedFromOtherCore,incServicedFromMem);
 	}
 	fclose(pFile);
