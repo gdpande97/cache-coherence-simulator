@@ -1,0 +1,150 @@
+L1_SIZE: 8192
+L1_ASSOC: 8
+L1_BLOCKSIZE: 64
+NUMBER OF PROCESSORS: 4
+COHERENCE PROTOCOL: MOSI
+TRACE FILE: trace/readWriteDebugBenchma
+===== before access ===============
+In cache 0 Address: 2707832260 State: I
+In cache 1 Address: 2707832260 State: I
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== after access ===============
+In cache 0 Address: 2707832260 State: S
+In cache 1 Address: 2707832260 State: I
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== before access ===============
+In cache 0 Address: 2707832260 State: S
+In cache 1 Address: 2707832260 State: I
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== after access ===============
+In cache 0 Address: 2707832260 State: S
+In cache 1 Address: 2707832260 State: S
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== before access ===============
+In cache 0 Address: 2707832260 State: S
+In cache 1 Address: 2707832260 State: S
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== after access ===============
+In cache 0 Address: 2707832260 State: S
+In cache 1 Address: 2707832260 State: S
+In cache 2 Address: 2707832260 State: S
+In cache 3 Address: 2707832260 State: I
+===== before access ===============
+In cache 0 Address: 2707832260 State: S
+In cache 1 Address: 2707832260 State: S
+In cache 2 Address: 2707832260 State: S
+In cache 3 Address: 2707832260 State: I
+===== after access ===============
+In cache 0 Address: 2707832260 State: S
+In cache 1 Address: 2707832260 State: S
+In cache 2 Address: 2707832260 State: S
+In cache 3 Address: 2707832260 State: S
+===== before access ===============
+In cache 0 Address: 2707832260 State: S
+In cache 1 Address: 2707832260 State: S
+In cache 2 Address: 2707832260 State: S
+In cache 3 Address: 2707832260 State: S
+===== after access ===============
+In cache 0 Address: 2707832260 State: M
+In cache 1 Address: 2707832260 State: I
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== before access ===============
+In cache 0 Address: 2707832260 State: M
+In cache 1 Address: 2707832260 State: I
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== after access ===============
+In cache 0 Address: 2707832260 State: I
+In cache 1 Address: 2707832260 State: M
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== before access ===============
+In cache 0 Address: 2707832260 State: I
+In cache 1 Address: 2707832260 State: M
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: I
+===== after access ===============
+In cache 0 Address: 2707832260 State: I
+In cache 1 Address: 2707832260 State: I
+In cache 2 Address: 2707832260 State: M
+In cache 3 Address: 2707832260 State: I
+===== before access ===============
+In cache 0 Address: 2707832260 State: I
+In cache 1 Address: 2707832260 State: I
+In cache 2 Address: 2707832260 State: M
+In cache 3 Address: 2707832260 State: I
+===== after access ===============
+In cache 0 Address: 2707832260 State: I
+In cache 1 Address: 2707832260 State: I
+In cache 2 Address: 2707832260 State: I
+In cache 3 Address: 2707832260 State: M
+===== Simulation results      =====
+Processor number : 0
+01. number of reads:				1
+02a. number of read misses:			1
+02b. number of read Hits:        0
+03. number of writes:				1
+04a. number of write misses:			0
+04b. number of write Hits:       1
+05. total miss rate:				50.00%
+06. number of writebacks:			0
+07. number of invalidations:         1
+08. number of getMMsgs:         1
+09. number of servicedFromMem:         0
+10. number of servicedFromOtherCore:         0
+10. number of sendDatatoMem:         0
+12. number of getSMsgs:         1
+===== Simulation results      =====
+Processor number : 1
+01. number of reads:				1
+02a. number of read misses:			1
+02b. number of read Hits:        0
+03. number of writes:				1
+04a. number of write misses:			1
+04b. number of write Hits:       0
+05. total miss rate:				100.00%
+06. number of writebacks:			0
+07. number of invalidations:         2
+08. number of getMMsgs:         1
+09. number of servicedFromMem:         0
+10. number of servicedFromOtherCore:         1
+10. number of sendDatatoMem:         0
+12. number of getSMsgs:         1
+===== Simulation results      =====
+Processor number : 2
+01. number of reads:				1
+02a. number of read misses:			1
+02b. number of read Hits:        0
+03. number of writes:				1
+04a. number of write misses:			1
+04b. number of write Hits:       0
+05. total miss rate:				100.00%
+06. number of writebacks:			0
+07. number of invalidations:         2
+08. number of getMMsgs:         1
+09. number of servicedFromMem:         0
+10. number of servicedFromOtherCore:         1
+10. number of sendDatatoMem:         0
+12. number of getSMsgs:         1
+===== Simulation results      =====
+Processor number : 3
+01. number of reads:				1
+02a. number of read misses:			1
+02b. number of read Hits:        0
+03. number of writes:				1
+04a. number of write misses:			1
+04b. number of write Hits:       0
+05. total miss rate:				100.00%
+06. number of writebacks:			0
+07. number of invalidations:         1
+08. number of getMMsgs:         1
+09. number of servicedFromMem:         1
+10. number of servicedFromOtherCore:         1
+10. number of sendDatatoMem:         0
+12. number of getSMsgs:         1
