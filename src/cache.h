@@ -20,7 +20,7 @@ enum
    EXCLUSIVE,
    OWNED,
    DIRTY,
-   COFEESCP
+   COFEE
 };
 enum
 {
@@ -29,7 +29,8 @@ enum
    NOACTION = 2,
    POLL_MESI = 3,
    POLL_MOSI = 4,
-   POLL_MOESI = 5
+   POLL_MOESI = 5,
+   POLL_COFEE = 6
 };
 
 class cacheLine

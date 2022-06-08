@@ -1,5 +1,5 @@
 /*******************************************************
-						  main.cc
+					main.cc
 ********************************************************/
 
 #include <stdlib.h>
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	printf("L1_ASSOC: %d\n", cache_assoc);
 	printf("L1_BLOCKSIZE: %d\n", blk_size);
 	printf("NUMBER OF PROCESSORS: %d\n", num_processors);
-	printf("COHERENCE PROTOCOL: %s\n", (protocol == 0) ? "MSI" : ((protocol == 1) ? "MESI" : ((protocol == 2) ? "MOSI" : "MOESI")));
+	printf("COHERENCE PROTOCOL: %s\n", (protocol == 0) ? "MSI" : ((protocol == 1) ? "MESI" : ((protocol == 2) ? "MOSI" : ((protocol == 3) ? "MOESI" : "COFEE"))));
 	printf("TRACE FILE: %.27s\n", &fname[3]); // no "../"
 
 	//*********************************************//
@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
 	//*****propagate each request down through memory hierarchy**********//
 	//*****by calling cachesArray[processor#]->Access(...)***************//
 	///******************************************************************//
+	int total_access = 0;
 	while ((getline(&line, &len, pFile)) != -1)
 	{ // iterate line by line
 		// ===== parsing arguments ===============
@@ -126,14 +127,16 @@ int main(int argc, char *argv[])
 		cout << "Total writebacks: " << total_writebacks << endl;
 		cout << "Total getM: " << total_getM << endl;
 		cout << "Total silent: " << total_silent << endl;
+		total_access++;
+		cout << "Total access: " << total_access << endl;
 	}
 	fclose(pFile);
 
 	//********************************//
 	// print out all caches' statistics //
 	//********************************//
-	for (int i = 0; i < num_processors; i++)
-	{
-		privateCaches[i]->printStats(i);
-	}
+	// for (int i = 0; i < num_processors; i++)
+	// {
+	// 	privateCaches[i]->printStats(i);
+	// }
 }
